@@ -1,255 +1,195 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:itverse_frontend/config/routes/routes.dart';
 import 'package:itverse_frontend/constants/app_constants.dart';
-import 'package:itverse_frontend/core/aqi_service.dart';
-import 'package:itverse_frontend/model/aq_object.dart';
-import 'package:itverse_frontend/util/services/location_services.dart';
+
+import '../config/routes/routes.dart';
+import '../util/helper/auto_complete.dart';
+import '../widgets/custom_search.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class HomePage extends StatefulWidget {
-  final String? address;
-  const HomePage({super.key, this.address});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String _address = "";
-  final AQIServiceRenderer _service = AQIServiceRenderer();
   @override
   void initState() {
-    getData();
     super.initState();
   }
 
-  bool _isLoading = true;
-
+  final TextEditingController _cityOne = TextEditingController();
+  final TextEditingController _cityTwo = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(_address),
         actions: [
           IconButton(
-            onPressed: getData,
-            icon: const Icon(Icons.location_on),
-          )
+            onPressed: () {
+              showSearch(context: context, delegate: CustomSearchDelegate());
+            },
+            icon: const Icon(Icons.search),
+          ),
         ],
       ),
-      backgroundColor:
-          _isLoading ? Colors.white : _service.getAQIColor(aqiObject!.aqi),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Image.asset(
-                        _service.getAQIIcon(aqiObject!.aqi)!,
-                      ),
-                      Text(
-                        'Your AQI level is: ${aqiObject!.aqi}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, rCityListPage,
+                          arguments: "worst"),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.red.shade300,
+                                  Colors.red.shade400,
+                                  Colors.red.shade500,
+                                  Colors.red.shade600,
+                                  Colors.red.shade700,
+                                  Colors.red.shade800,
+                                  Colors.red.shade900,
+                                ])),
+                        child: const Text(
+                          "Top 10 Polluted Cities",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
-                      vGap10,
-                      Container(
+                    ),
+                  ),
+                  hGap20,
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, rCityListPage,
+                          arguments: "top"),
+                      child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: Colors.white,
+                          gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.green.shade300,
+                                Colors.green.shade400,
+                                Colors.green.shade500,
+                                Colors.green.shade600,
+                                Colors.green.shade700,
+                                Colors.green.shade800,
+                                Colors.green.shade900,
+                              ]),
                         ),
-                        child: RichText(
+                        child: const Text(
+                          "Top 10 Cleanest Cities",
                           textAlign: TextAlign.center,
-                          text: TextSpan(children: [
-                            TextSpan(
-                              text: "${_service.getAQILevel(aqiObject!.aqi)}",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: _service.getAQIColor(aqiObject!.aqi),
-                              ),
-                            ),
-                            TextSpan(
-                                text:
-                                    " ( ${_service.getAQILevelMap(aqiObject!.aqi)} )",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey.shade600,
-                                ))
-                          ]),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
                         ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              vGap20,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.shade200,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: _cityOne,
                       ),
                       vGap10,
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Advice",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.white,
-                            ),
-                            child: Text(
-                              "${_service.getAQIAdvice(aqiObject!.aqi)}",
-                            ),
-                          ),
-                          vGap10,
-                          const Text(
-                            "Health Effects",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.white,
-                            ),
-                            child: Text(
-                              "${_service.getAQIHealthEffects(aqiObject!.aqi)}",
-                            ),
-                          ),
-                        ],
+                      CustomTextField(
+                        controller: _cityTwo,
                       ),
-                      vGap20,
-                      Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                    text: "PM 2.5: ",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "${aqiObject!.pm25}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                ]),
-                              ),
-                              RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                    text: "PM 10: ",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "${aqiObject!.pm10}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                ]),
-                              ),
-                              RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                    text: "Ozone: ",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: "${aqiObject!.o3}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                ]),
-                              ),
-                            ],
-                          )),
+                      vGap10,
+                      ElevatedButton(
+                        onPressed: () {
+                          validate();
+                        },
+                        child: const Text("Compare"),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-      bottomNavigationBar: (widget.address != null)
-          ? null
-          : BottomAppBar(
-              height: 55,
-              elevation: 10,
-              shadowColor: Colors.black,
-              shape: const CircularNotchedRectangle(),
-              color: Colors.white,
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, rHomePage);
-                      },
-                      icon: const Icon(
-                        Icons.home,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, rSearchPage);
-                      },
-                      icon: const Icon(
-                        Icons.search,
-                      ),
-                    ),
-                  ])),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  AirQualityObject? aqiObject;
-  Future getData() async {
-    Position position;
-    if (widget.address == null) {
-      position = await LocationService.determinePosition();
-      _address = await LocationService.getAddress(position);
-      debugPrint("curr lat: ${position.latitude}, long: ${position.longitude}");
+  void validate() {
+    if (_cityOne.text.isNotEmpty && _cityTwo.text.isNotEmpty) {
+      Navigator.pushNamed(context, rComparisonPage, arguments: {
+        "cityOne": _cityOne.text,
+        "cityTwo": _cityTwo.text,
+      });
     } else {
-      position = await LocationService.getLocation(widget.address!);
-      _address = widget.address!;
-      debugPrint(
-          "search lat: ${position.latitude}, long: ${position.longitude}");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Please Enter Both City Name"),
+      ));
     }
+  }
+}
 
-    aqiObject = await AQIServiceRenderer.getAirQualityObject(position);
+class CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  const CustomTextField({
+    super.key,
+    required this.controller,
+  });
 
-    setState(() {
-      _isLoading = false;
-    });
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+        height: 60,
+        child: TypeAheadField(
+          textFieldConfiguration: TextFieldConfiguration(
+              controller: controller,
+              decoration: const InputDecoration(
+                  labelText: "Enter City Name", border: OutlineInputBorder())),
+          suggestionsCallback: (pattern) =>
+              AutoCompleteService().getSuggestions(pattern),
+          itemBuilder: (context, suggestion) {
+            return ListTile(
+              leading: const Icon(Icons.location_on),
+              title: Text(suggestion),
+            );
+          },
+          onSuggestionSelected: (suggestion) {
+            controller.text = suggestion;
+          },
+        ));
   }
 }
