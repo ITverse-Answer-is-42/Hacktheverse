@@ -3,6 +3,8 @@ const catchAsync = require("../utils/catchAsync");
 const axios = require("axios");
 const allCountries = require("../utils/allCountries"); 
 const SEF = require("../model/SEF");
+const data = require("../utils/cityDetails.json");
+const countries = require("../utils/countryLatLong.json");
 
 exports.getAqi = catchAsync(async (req, res, next) => {
   const { view, lat, long , country} = req.query;
@@ -11,7 +13,7 @@ exports.getAqi = catchAsync(async (req, res, next) => {
 
   if (view) {
     // Get AQI data based on 'view'
-    data = await getRanking(view);
+    data = await getRanking(view);d
   } else if (lat && long) {
     // Get AQI data based on latitude and longitude
     data = await getDataWithLatLong(lat, long);
@@ -128,11 +130,88 @@ for (const property in forecastData.daily) {
   return result;
 }
 
+
+
 const getSEFwithCountry = async (country) => {
-    // regex to match country name
+
     const regex = new RegExp(country, "i");
     console.log(country);
     const sef = await SEF.findOne({ name: regex});
-   
     return sef;
+}
+
+exports.getMarkers = catchAsync(async (req, res, next) => {
+  const { lat,long  } = req.query;
+  
+  
+  const markers = [];
+  const onlyCountries = [];
+
+  for(let i = 0; i < data.length; i++) {
+    const lat1 = data[i].lat;
+    const long1 = data[i].lng;
+    const distance = haversineDistance(lat1, long1, lat, long);
+    if(distance > 100) continue;
+    const city = data[i].city;
+    const country = data[i].country;
+    onlyCountries.push(country);
+    const url = `https://api.waqi.info/feed/geo:${lat1};${long1}/?token=${process.env.AQI_API_KEY}`
+    const info = axios.get(url);
+    markers.push(info);
+  }
+
+
+  const allInfo = await Promise.all(markers);
+  
+  console.log(allInfo.length);
+  const response = [];
+  for(let i = 0; i < allInfo.length; i++) {
+    if(allInfo[i].data.status !== 'ok') continue;
+    
+    const newData = allInfo[i].data.data;
+    const country = onlyCountries[i];
+
+    const countryInfo = countries.find((c)=>c.Country === country);
+
+    response.push({
+      lat: newData.city.geo[0],
+      long: newData.city.geo[1],
+      aqi: newData.aqi,
+      country:countryInfo
+    });
+  }
+  const unique = getUniqueObjects(response);
+  const setData = [];
+  for(const property in unique) {
+    setData.push(unique[property]);
+  }
+ 
+  console.log(setData.length);
+  res.status(200).json(setData);
+});
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in kilometers
+
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(Math.PI / 180 * lat1) * Math.cos(Math.PI / 180 * lat2) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
+function getUniqueObjects(objects) {
+  const uniqueObjects = {};
+
+  for (const object of objects) {
+    const objectKey = JSON.stringify(object);
+
+    if (!uniqueObjects[objectKey]) {
+      uniqueObjects[objectKey] = object;
+    }
+  }
+
+  return uniqueObjects;
 }

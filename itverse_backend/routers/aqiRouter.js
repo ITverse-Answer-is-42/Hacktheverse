@@ -15,5 +15,9 @@ router
   .route("/")
   .get(aqiController.getAqi);
 
+router
+  .route("/markers")
+  .get(aqiController.getMarkers);
+
 
 module.exports = router;
