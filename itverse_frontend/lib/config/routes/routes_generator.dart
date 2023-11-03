@@ -10,7 +10,9 @@ class RouteGenerator {
 
     switch (settings.name) {
       case rHomePage :
-        return MaterialPageRoute(builder: (context) => const HomePage());
+        return MaterialPageRoute(builder: (context) =>  HomePage(
+          address: args as String?,
+        ));
       case rSearchPage :
         return MaterialPageRoute(builder: (context) => const SearchScreen());
       default:
