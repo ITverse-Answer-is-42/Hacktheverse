@@ -5,8 +5,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:itverse_frontend/constants/api_path.dart';
 import 'package:itverse_frontend/constants/asset_path.dart';
+import 'package:itverse_frontend/model/socio_aq_object.dart';
 
-import '../model/aq_object.dart';
+import '../model/aq_metric_object.dart';
 
 enum AQIlevels {
   good,
@@ -124,12 +125,13 @@ class AQIServiceRenderer {
     }
   }
 
-  static getAirQualityObject(Position position) async {
+  static getAirQualityObject(
+      {required Position position, String? countryName}) async {
     Map<String, dynamic> data = {};
     try {
       final response = await http.get(
           Uri.parse(
-              "$kHereUrl?lat=${position.latitude}&long=${position.longitude}"),
+              "$kHereUrl?lat=${position.latitude}&long=${position.longitude}&country=$countryName"),
           headers: {"Content-Type": "application/json,"});
 
       data = jsonDecode(response.body);
@@ -137,9 +139,10 @@ class AQIServiceRenderer {
     } catch (e) {
       debugPrint(e.toString());
     }
-    final a = AirQualityObject.fromJson(data['cities'][0]);
-
-    debugPrint(a.aqi.toString());
-    return a;
+    if (countryName == null) {
+      return AirQualityMetricObject.fromJson(data['cities'][0]);
+    } else {
+      return SocioAIQobject.fromJson(data);
+    }
   }
 }
