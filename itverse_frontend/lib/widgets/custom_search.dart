@@ -46,7 +46,7 @@ class CustomSearchDelegate extends SearchDelegate {
           return ListTile(
             title: Text(result),
             onTap: () {
-              Navigator.pushNamed(context, rHomePage, arguments: result);
+              Navigator.pushNamed(context, rContentPage, arguments: result);
             },
           );
         });
@@ -76,7 +76,7 @@ class CustomSearchDelegate extends SearchDelegate {
           return ListTile(
             title: Text(result),
             onTap: () {
-              Navigator.pushNamed(context, rHomePage, arguments: result);
+              Navigator.pushNamed(context, rContentPage, arguments: result);
             },
           );
         });
