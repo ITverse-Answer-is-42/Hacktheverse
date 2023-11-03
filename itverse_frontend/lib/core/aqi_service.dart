@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:itverse_frontend/constants/api_path.dart';
+import 'package:itverse_frontend/constants/asset_path.dart';
 
 import '../model/aq_object.dart';
 
@@ -74,6 +75,15 @@ class AQIServiceRenderer {
         "Health warning of emergency conditions. The entire population is more likely to be affected.",
   };
 
+  Map<AQIlevels, String> icons = {
+    AQIlevels.good: kGoodIcon,
+    AQIlevels.moderate: kModerateIcon,
+    AQIlevels.unhealthyForSensitiveGroups: kUnhealthyForSensitiveIcon,
+    AQIlevels.unhealthy: kUnhealthyIcon,
+    AQIlevels.veryUnhealthy: kVeryUnhealthyIcon,
+    AQIlevels.hazardous: kHazardousIcon,
+  };
+
   Color? getAQIColor(int aqi) {
     return colors[getAQIlevel(aqi)];
   }
@@ -92,6 +102,10 @@ class AQIServiceRenderer {
 
   String? getAQIHealthEffects(int aqi) {
     return healthEffects[getAQIlevel(aqi)];
+  }
+
+  String? getAQIIcon(int aqi) {
+    return icons[getAQIlevel(aqi)];
   }
 
   static AQIlevels getAQIlevel(int aqi) {
@@ -115,7 +129,7 @@ class AQIServiceRenderer {
     try {
       final response = await http.get(
           Uri.parse(
-              "$kHereUrl?lat=${position.latitude}&lon=${position.longitude}"),
+              "$kHereUrl?lat=${position.latitude}&long=${position.longitude}"),
           headers: {"Content-Type": "application/json,"});
 
       data = jsonDecode(response.body);
