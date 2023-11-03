@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:itverse_frontend/constants/api_path.dart';
 
 class LocationService {
   static Future<Position> determinePosition() async {
@@ -47,11 +51,35 @@ class LocationService {
     } catch (e) {
       return "error";
     }
-    
+
     if (placemarks.isEmpty) {
       return "";
     } else {
       return "${placemarks.first.locality}, ${placemarks.first.country}";
     }
+  }
+
+  static Future<Position> getLocation(String address) async {
+    String queryUrl = "$kGeoCodingUrl?address=$address&key=$kGoogleMapsApi";
+
+    final response = await http.get(Uri.parse(queryUrl), headers: {
+      'Content-Type': 'application/json',
+    });
+
+    final result = jsonDecode(response.body);
+
+    final Position position = Position(
+        latitude: result['results'][0]['geometry']['location']['lat'],
+        longitude: result['results'][0]['geometry']['location']['lng'],
+        accuracy: 0,
+        timestamp: DateTime.now(),
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0);
+
+    return position;
   }
 }
