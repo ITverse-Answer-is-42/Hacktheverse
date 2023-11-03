@@ -1,12 +1,13 @@
 const appError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const axios = require("axios");
-const allCountries = require("../utils/allCountries");
+const allCountries = require("../utils/allCountries"); 
+const SEF = require("../model/SEF");
 
 exports.getAqi = catchAsync(async (req, res, next) => {
-  const { view, lat, long } = req.query;
+  const { view, lat, long , country} = req.query;
 
-  let data;
+  let data,sef;
 
   if (view) {
     // Get AQI data based on 'view'
@@ -14,6 +15,11 @@ exports.getAqi = catchAsync(async (req, res, next) => {
   } else if (lat && long) {
     // Get AQI data based on latitude and longitude
     data = await getDataWithLatLong(lat, long);
+    const location = country;
+    const words = location.split(' '); 
+    const lastWord = words[words.length - 1]; 
+    sef = await getSEFwithCountry(lastWord);
+    
   } else {
     // Get current AQI data if no specific parameters are provided
     data = await getCurrent();
@@ -23,6 +29,11 @@ exports.getAqi = catchAsync(async (req, res, next) => {
   const response = {
     status: 'success',
     cities: Array.isArray(data) ? data : [data],
+    tgdp : sef ? sef.tgdp : [],
+    gdpCapita : sef ? sef.gdpCapita : [],
+    gdpGrowthRate : sef ? sef.gdpGrowthRate : [],
+    tpopulation : sef ? sef.tpopulation : [],
+    populationGrowth : sef ? sef.populationGrowth : [],
   };
 
   res.status(200).json(response);
@@ -115,4 +126,13 @@ for (const property in forecastData.daily) {
   
   console.log(forecast);
   return result;
+}
+
+const getSEFwithCountry = async (country) => {
+    // regex to match country name
+    const regex = new RegExp(country, "i");
+    console.log(country);
+    const sef = await SEF.findOne({ name: regex});
+   
+    return sef;
 }

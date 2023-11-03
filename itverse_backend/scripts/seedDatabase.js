@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const SEF = require("../model/SEF");
 
-const DB = "mongodb://localhost:27017/test";
+const DB = "mongodb://localhost:27017/mqi";
 
 mongoose
   .connect(DB)
