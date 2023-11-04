@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:itverse_frontend/screens/comparison_page.dart';
+import 'package:itverse_frontend/screens/map_screen.dart';
 
 import '../../screens/city_list.dart';
 import '../../screens/contentpage.dart';
@@ -24,14 +25,14 @@ class RouteGenerator {
                   view: args as String,
                 ));
       case rComparisonPage:
-      final map = args as Map<String, String>;
+        final map = args as Map<String, String>;
         return MaterialPageRoute(
-          
             builder: (context) => ComparisonPage(
-              cityOne: map["cityOne"]!,
-              cityTwo: map["cityTwo"]!,
-
-            ));
+                  cityOne: map["cityOne"]!,
+                  cityTwo: map["cityTwo"]!,
+                ));
+      case rMapScreen:
+        return MaterialPageRoute(builder: (context) => const MapScreen());
       default:
         return MaterialPageRoute(builder: (context) => const ContentPage());
     }

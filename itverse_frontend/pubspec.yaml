@@ -42,6 +42,9 @@ dependencies:
   animated_notch_bottom_bar: ^1.0.0
   flutter_typeahead: ^4.8.0
   syncfusion_flutter_charts: ^23.1.43
+  google_maps_flutter: ^2.5.0
+  syncfusion_flutter_sliders: ^23.1.43
+  label_marker: ^1.0.1
 
 dev_dependencies:
   flutter_test:
