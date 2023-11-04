@@ -40,7 +40,84 @@ We've designed an engaging and user-friendly interface suitable for the Android 
 1. Clone this repository in your local development environment.
 2. Follow the setup instructions provided in the repository to start working on the project.
 
+# API Documentation
+
+This documentation outlines the usage and functionality of the Air Quality Index (AQI) API endpoint, which provides information on air quality.
+
+## Endpoint
+
+- **URL**: `localhost:4000/api/v1/aqi`
+- **HTTP Method**: GET
+
+## Query Parameters
+
+- `view` (Optional): Specify the view for AQI data retrieval. Only accepts "top" or "worst" as values.
+- `lat` (Optional): Latitude coordinate for location-based data retrieval.
+- `long` (Optional): Longitude coordinate for location-based data retrieval.
+- `country` (Optional): Specify the country for AQI data retrieval.
+
+## Controller Logic
+
+- Depending on the provided query parameters, the controller performs the following actions:
+  - If `view` is provided with the value "top" or "worst," it retrieves the top or worst cities' AQI data.
+  - If `lat` and `long` are provided, it retrieves AQI data based on latitude and longitude.
+  - The controller also extracts the last word from the `country` parameter and retrieves additional data, including position air index and Social Economic factors.
+
+## Response
+
+The API responds with a JSON object with the following structure:
+
+- `status`: A string indicating the status of the response, set to 'success'.
+- `cities`: An array of AQI data. If multiple cities are retrieved, they are contained in an array.
+- `positionAirIndex`: An array of position air index data.
+- `socialEconomicFactors`: Five arrays of social economic factors data.
+
+
+## Endpoint
+
+- **URL**: `localhost:4000/api/v1/markers`
+- **HTTP Method**: GET
+
+## Query Parameters
+
+- `lat` (Required): Latitude coordinate for location-based data retrieval.
+- `long` (Required): Longitude coordinate for location-based data retrieval.
+- `query` (Optional): Specify the query type, which can be one of the following:
+  - `AQI` (Air Quality Index)
+  - `GDP/Capita` (Gross Domestic Product per Capita)
+  - `Total Population`
+  - `Total GDP`
+  - `GDP Growth Rate`
+  - `Population Growth`
+- `min` (Optional): Minimum value for the specified query.
+- `max` (Optional): Maximum value for the specified query.
+
+## Controller Logic
+
+- The controller takes the provided parameters and retrieves marker data based on location (latitude and longitude).
+- It calculates the distance between the provided coordinates and the markers from the data.
+- For markers within 100 units of distance, it sends a request to the AQI API to get air quality information.
+- It also extracts the country information and makes a request to get Social Economic Factors (SEF) based on the country.
+- The controller filters and processes the data based on the query type and value range, if provided.
+
+## Response
+
+The API responds with a JSON array containing marker information, which includes:
+- `lat`: Latitude of the marker.
+- `long`: Longitude of the marker.
+- `aqi`: Air Quality Index value.
+- `country`: Country information.
+- Additional values based on the specified query type:
+  - `gdp`: Gross Domestic Product per Capita.
+  - `population`: Total Population.
+  - `tgdp`: Total GDP.
+  - `populationGrowth`: Population Growth.
+  - `gdpGrowthRate`: GDP Growth Rate.
+
+The response data is filtered and processed based on the provided query and value range.
+
+
 ## Contributors
-- [Nowshin Alam Owishi](https://github.com/your-username)
+- [Nowshin Alam Owishi](https://github.com/owishiboo)
 - [Moksedur Rahman Sohan](https://github.com/ShikariSohan)
-- [Muhit Mahmud](https://github.com/2018331022)
+- [Muhit Mahmud](https://github.com/201833113)
