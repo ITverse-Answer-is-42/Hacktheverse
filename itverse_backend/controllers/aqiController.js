@@ -13,7 +13,7 @@ exports.getAqi = catchAsync(async (req, res, next) => {
 
   if (view) {
     // Get AQI data based on 'view'
-    data = await getRanking(view);d
+    data = await getRanking(view);
   } else if (lat && long) {
     // Get AQI data based on latitude and longitude
     data = await getDataWithLatLong(lat, long);
@@ -61,8 +61,7 @@ const getAllCitiesInfo = async (data) => {
     for(let i = 0; i < data.length; i++) {
       const city = data[i].city;
       const country = data[i].country;
-      console.log("city", city);
-        console.log("country", country);
+     
         
       const url = `https://api.waqi.info/feed/${city}/?token=${process.env.AQI_API_KEY}`
     //   const info =  getCityInfo(city, country);
@@ -74,7 +73,6 @@ const getAllCitiesInfo = async (data) => {
     for(let i = 0; i < allInfo.length; i++) {
         if(allInfo[i].data.status !== 'ok') continue;
         const newData = allInfo[i].data.data;
-        console.log(newData)
         datas.push({
             ...data[i],
             "dominantPol" : newData.dominantPol,
@@ -91,7 +89,7 @@ const getAllCitiesInfo = async (data) => {
 const getCurrent = async ()=>{
     const url = `https://api.waqi.info/feed/here/?token=${process.env.AQI_API_KEY}`
     const info = await axios.get(url);
-    console.log(info.data.data)
+  
     const data = {
         aqi : info.data.data.aqi,
         dominentpol: info.data.data.dominantPol,
@@ -125,8 +123,7 @@ for (const property in forecastData.daily) {
   }
   
   const forecast = result;
-  
-  console.log(forecast);
+ 
   return result;
 }
 
@@ -135,17 +132,20 @@ for (const property in forecastData.daily) {
 const getSEFwithCountry = async (country) => {
 
     const regex = new RegExp(country, "i");
-    console.log(country);
+  
     const sef = await SEF.findOne({ name: regex});
     return sef;
 }
 
 exports.getMarkers = catchAsync(async (req, res, next) => {
-  const { lat,long  } = req.query;
+  const { lat,long,query,min,max  } = req.query;
   
   
   const markers = [];
   const onlyCountries = [];
+
+
+  
 
   for(let i = 0; i < data.length; i++) {
     const lat1 = data[i].lat;
@@ -162,8 +162,7 @@ exports.getMarkers = catchAsync(async (req, res, next) => {
 
 
   const allInfo = await Promise.all(markers);
-  
-  console.log(allInfo.length);
+
   const response = [];
   for(let i = 0; i < allInfo.length; i++) {
     if(allInfo[i].data.status !== 'ok') continue;
@@ -171,13 +170,46 @@ exports.getMarkers = catchAsync(async (req, res, next) => {
     const newData = allInfo[i].data.data;
     const country = onlyCountries[i];
 
-    const countryInfo = countries.find((c)=>c.Country === country);
+    const sef = await getSEFwithCountry(country);
+
+    const gdp = sef ? sef.gdpCapita[0].value : 0;
+    const population = sef ? sef.tpopulation[0].value : 0;
+    const tgdp = sef ? sef.tgdp[0].value : 0;
+    const populationGrowth = sef ? sef.populationGrowth[0].value : 0;
+    const gdpGrowthRate = sef ? sef.gdpGrowthRate[0].value : 0;
+
+    if(min && max) {
+      if(query === "AQI") {
+        if(newData.aqi < min || newData.aqi > max) continue;
+      }
+      else if(query === "GDP/Capita") {
+        if(gdp < min || gdp > max) continue;
+      }
+      else if(query === "Total Population") {
+        if(population < min || population > max) continue;
+      }
+      else if(query === "Total GDP") {
+        if(tgdp < min || tgdp > max) continue;
+      }
+      else if(query === "GDP Growth Rate") {
+        if(populationGrowth < min || populationGrowth > max) continue;
+      }
+      else if(query === "Population Growth") {
+        if(gdpGrowthRate < min || gdpGrowthRate > max) continue;
+      }
+    }
 
     response.push({
       lat: newData.city.geo[0],
       long: newData.city.geo[1],
       aqi: newData.aqi,
-      country:countryInfo
+    
+      country:country,
+      gdp,
+      population,
+      tgdp,
+      populationGrowth,
+      gdpGrowthRate
     });
   }
   const unique = getUniqueObjects(response);
