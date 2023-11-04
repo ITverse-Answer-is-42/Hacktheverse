@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:itverse_frontend/constants/api_path.dart';
+import 'package:itverse_frontend/constants/asset_path.dart';
+import 'package:itverse_frontend/model/socio_aq_object.dart';
 
-import '../model/aq_object.dart';
+import '../model/aq_metric_object.dart';
 
 enum AQIlevels {
   good,
@@ -74,6 +76,15 @@ class AQIServiceRenderer {
         "Health warning of emergency conditions. The entire population is more likely to be affected.",
   };
 
+  Map<AQIlevels, String> icons = {
+    AQIlevels.good: kGoodIcon,
+    AQIlevels.moderate: kModerateIcon,
+    AQIlevels.unhealthyForSensitiveGroups: kUnhealthyForSensitiveIcon,
+    AQIlevels.unhealthy: kUnhealthyIcon,
+    AQIlevels.veryUnhealthy: kVeryUnhealthyIcon,
+    AQIlevels.hazardous: kHazardousIcon,
+  };
+
   Color? getAQIColor(int aqi) {
     return colors[getAQIlevel(aqi)];
   }
@@ -94,6 +105,10 @@ class AQIServiceRenderer {
     return healthEffects[getAQIlevel(aqi)];
   }
 
+  String? getAQIIcon(int aqi) {
+    return icons[getAQIlevel(aqi)];
+  }
+
   static AQIlevels getAQIlevel(int aqi) {
     if (aqi <= 50) {
       return AQIlevels.good;
@@ -110,12 +125,13 @@ class AQIServiceRenderer {
     }
   }
 
-  static getAirQualityObject(Position position) async {
+  static getAirQualityObject(
+      {required Position position, String? countryName}) async {
     Map<String, dynamic> data = {};
     try {
       final response = await http.get(
           Uri.parse(
-              "$kHereUrl?lat=${position.latitude}&lon=${position.longitude}"),
+              "$kHereUrl?lat=${position.latitude}&long=${position.longitude}&country=$countryName"),
           headers: {"Content-Type": "application/json,"});
 
       data = jsonDecode(response.body);
@@ -123,9 +139,10 @@ class AQIServiceRenderer {
     } catch (e) {
       debugPrint(e.toString());
     }
-    final a = AirQualityObject.fromJson(data['cities'][0]);
-
-    debugPrint(a.aqi.toString());
-    return a;
+    if (countryName == null) {
+      return AirQualityMetricObject.fromJson(data['cities'][0]);
+    } else {
+      return SocioAIQobject.fromJson(data);
+    }
   }
 }

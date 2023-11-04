@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:itverse_frontend/config/routes/routes.dart';
 import 'package:itverse_frontend/constants/app_constants.dart';
-import 'package:itverse_frontend/core/aqi_service.dart';
-import 'package:itverse_frontend/model/aq_object.dart';
-import 'package:itverse_frontend/util/services/location_services.dart';
+
+import '../config/routes/routes.dart';
+import '../util/helper/auto_complete.dart';
+import '../widgets/custom_search.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,74 +14,196 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _address = "";
-  final AQIServiceRenderer _service = AQIServiceRenderer();
   @override
   void initState() {
-    getData();
     super.initState();
   }
 
-  double aqi = 40.0;
-  bool _isLoading = true;
-
+  final TextEditingController _cityOne = TextEditingController();
+  final TextEditingController _cityTwo = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(_address),
         actions: [
           IconButton(
-            onPressed: getData,
-            icon: const Icon(Icons.location_on),
-          )
+            onPressed: () {
+              showSearch(context: context, delegate: CustomSearchDelegate());
+            },
+            icon: const Icon(Icons.search),
+          ),
         ],
       ),
-      backgroundColor:
-          _isLoading ? Colors.white : _service.getAQIColor(aqiObject!.aqi),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: Padding(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, rCityListPage,
+                          arguments: "worst"),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.red.shade300,
+                                  Colors.red.shade400,
+                                  Colors.red.shade500,
+                                  Colors.red.shade600,
+                                  Colors.red.shade700,
+                                  Colors.red.shade800,
+                                  Colors.red.shade900,
+                                ])),
+                        child: const Text(
+                          "Top 10 Polluted Cities",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  hGap20,
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, rCityListPage,
+                          arguments: "top"),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.green.shade300,
+                                Colors.green.shade400,
+                                Colors.green.shade500,
+                                Colors.green.shade600,
+                                Colors.green.shade700,
+                                Colors.green.shade800,
+                                Colors.green.shade900,
+                              ]),
+                        ),
+                        child: const Text(
+                          "Top 10 Cleanest Cities",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              vGap20,
+              Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'Your AQI level is: ${aqiObject!.aqi}',
-                    ),
-                    Text(
-                      "${_service.getAQILevel(aqiObject!.aqi)}",
-                    ),
-                    Text(
-                      "${_service.getAQILevelMap(aqiObject!.aqi)}",
-                    ),
-                    Text(
-                      "${_service.getAQIAdvice(aqiObject!.aqi)}",
-                    ),
-                    Text(
-                      "${_service.getAQIHealthEffects(aqiObject!.aqi)}",
-                    )
-                  ],
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.shade200,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: _cityOne,
+                      ),
+                      vGap10,
+                      CustomTextField(
+                        controller: _cityTwo,
+                      ),
+                      vGap10,
+                      ElevatedButton(
+                        onPressed: () {
+                          validate();
+                        },
+                        child: const Text("Compare"),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        Navigator.pushNamed(context, rSearchPage);
-      }),
+              vGap20,
+              InkWell(
+                onTap: () {
+                  Navigator.pushNamed(context, rMapScreen);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey.shade200,
+                  ),
+                  child: Text("Map Screen"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  AirQualityObject? aqiObject;
-  Future getData() async {
-    final position = await LocationService.determinePosition();
-    aqiObject = await AQIServiceRenderer.getAirQualityObject(position);
+  void validate() {
+    if (_cityOne.text.isNotEmpty && _cityTwo.text.isNotEmpty) {
+      Navigator.pushNamed(context, rComparisonPage, arguments: {
+        "cityOne": _cityOne.text,
+        "cityTwo": _cityTwo.text,
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Please Enter Both City Name"),
+      ));
+    }
+  }
+}
 
-    _address = await LocationService.getAddress(position);
-    setState(() {
-      _isLoading = false;
-    });
+class CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  const CustomTextField({
+    super.key,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+        height: 60,
+        child: TypeAheadField(
+          textFieldConfiguration: TextFieldConfiguration(
+              controller: controller,
+              decoration: const InputDecoration(
+                  labelText: "Enter City Name", border: OutlineInputBorder())),
+          suggestionsCallback: (pattern) =>
+              AutoCompleteService().getSuggestions(pattern),
+          itemBuilder: (context, suggestion) {
+            return ListTile(
+              leading: const Icon(Icons.location_on),
+              title: Text(suggestion),
+            );
+          },
+          onSuggestionSelected: (suggestion) {
+            controller.text = suggestion;
+          },
+        ));
   }
 }

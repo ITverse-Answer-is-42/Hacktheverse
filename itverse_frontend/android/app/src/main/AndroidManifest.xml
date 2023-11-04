@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <application
         android:label="itverse_frontend"
         android:name="${applicationName}"
@@ -31,5 +32,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+            <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyDl2Rtz9pi5LOc-LbBQ-3OxPfYFgb_ktVA"/>
     </application>
+    
+    
 </manifest>
