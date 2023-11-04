@@ -3,17 +3,17 @@ const aqiController = require("../controllers/aqiController");
 const router = express.Router();
 const rateLimit = require("express-rate-limit");
 
-// const loginRateLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 min in milliseconds
-//   max: 5,
-//   message: `Login error, you have reached maximum retries. Please try again after 30 minutes`,
-//   statusCode: 429,
-//   headers: true,
-// });
+const aqiRateLimiter = rateLimit({
+  windowMs: 60 * 1000, 
+  max: 15,
+  message: `Too many requests from this IP, please try again`,
+  statusCode: 429,
+  headers: true,
+});
 
 router
   .route("/")
-  .get(aqiController.getAqi);
+  .get(aqiRateLimiter,aqiController.getAqi);
 
 router
   .route("/markers")
